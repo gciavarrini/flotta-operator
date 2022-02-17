@@ -98,10 +98,13 @@ integration-test:
 
 TEST_PACKAGES := ./...
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test-fast:
+test-prepare-env:
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test  $(TEST_PACKAGES) -coverprofile cover.out --v -ginkgo.v -ginkgo.progress -ginkgo.skip e2e
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); 
+	
+test-fast: test-prepare-env 
+	go test  $(TEST_PACKAGES) -coverprofile cover.out --v -ginkgo.v -ginkgo.progress -ginkgo.skip e2e
 
 test-create-coverage:
 	sed -i '/mock_/d' cover.out
