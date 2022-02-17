@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/project-flotta/flotta-operator/internal/configmaps"
 	"github.com/project-flotta/flotta-operator/internal/devicemetrics"
@@ -54,6 +55,8 @@ var (
 		HardwareProfile: &models.HardwareProfileConfiguration{},
 		PeriodSeconds:   60,
 	}
+
+	playbookMap = make(map[string][]string)
 )
 
 type Handler struct {
@@ -153,7 +156,7 @@ func (h *Handler) GetDataMessageForDevice(ctx context.Context, params yggdrasil.
 	}
 	var workloadList models.WorkloadList
 	var secretList models.SecretList
-
+	var ansiblePlaybook string
 	if edgeDevice.DeletionTimestamp == nil {
 		var edgeDeployments []v1alpha1.EdgeDeployment
 
@@ -180,6 +183,11 @@ func (h *Handler) GetDataMessageForDevice(ctx context.Context, params yggdrasil.
 			logger.Error(err, "failed reading secrets for device deployments")
 			return operations.NewGetDataMessageForDeviceInternalServerError()
 		}
+		ansiblePlaybook, err = h.getAnsiblePlaybook(logger, deviceID)
+		if err != nil {
+			logger.Error(err, "failed reading ansible playbooks")
+			return operations.NewGetDataMessageForDeviceInternalServerError()
+		}
 	} else {
 		if utils.HasFinalizer(&edgeDevice.ObjectMeta, YggdrasilWorkloadFinalizer) {
 			err := h.deviceRepository.RemoveFinalizer(ctx, edgeDevice, YggdrasilWorkloadFinalizer)
@@ -190,11 +198,12 @@ func (h *Handler) GetDataMessageForDevice(ctx context.Context, params yggdrasil.
 	}
 
 	dc := models.DeviceConfigurationMessage{
-		DeviceID:      deviceID,
-		Version:       edgeDevice.ResourceVersion,
-		Configuration: &models.DeviceConfiguration{},
-		Workloads:     workloadList,
-		Secrets:       secretList,
+		DeviceID:        deviceID,
+		Version:         edgeDevice.ResourceVersion,
+		Configuration:   &models.DeviceConfiguration{},
+		Workloads:       workloadList,
+		Secrets:         secretList,
+		AnsiblePlaybook: ansiblePlaybook,
 	}
 
 	if edgeDevice.Spec.Heartbeat != nil {
@@ -239,6 +248,38 @@ func (h *Handler) GetDataMessageForDevice(ctx context.Context, params yggdrasil.
 		Content:   dc,
 	}
 	return operations.NewGetDataMessageForDeviceOK().WithPayload(&message)
+}
+
+// Temporary function to "mock" of the custom playbook will be sent from the user to the operator
+func (h *Handler) getAnsiblePlaybook(logger logr.Logger, deviceID string) (string, error) {
+	//check for yml file ("*_playbook.yml") in folder
+	files, err := ioutil.ReadDir(".")
+	if err != nil {
+		logger.Error(err, "cannot read dir")
+		return "", nil
+	}
+	for _, file := range files {
+		if x, found := playbookMap[deviceID]; strings.HasSuffix(file.Name(), "_playbook.yml") && (!found || (found && !contains(x, file.Name()))) {
+			//send the first file that hasn't been already sent to DeviceID
+			playbookMap[deviceID] = append(playbookMap[deviceID], file.Name())
+			content, err := ioutil.ReadFile(file.Name())
+			if err != nil {
+				logger.Error(err, "cannot read playbook file")
+				return "", nil
+			}
+			return string(content), nil
+		}
+	}
+	return "", nil
+}
+
+func contains(s []string, toFind string) bool {
+	for _, a := range s {
+		if a == toFind {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *Handler) getDeviceMetricsConfiguration(ctx context.Context, edgeDevice *v1alpha1.EdgeDevice) (*models.MetricsConfiguration, error) {
@@ -468,7 +509,7 @@ func (h *Handler) toWorkloadList(ctx context.Context, logger logr.Logger, deploy
 			if allowListSpec := spec.Metrics.AllowList; allowListSpec != nil {
 				allowList, err := h.allowLists.GenerateFromConfigMap(ctx, allowListSpec.Name, deployment.Namespace)
 				if err != nil {
-					return nil, fmt.Errorf("Cannot get AllowList Metrics Confimap for %v: %v", deployment.Name, err)
+					return nil, fmt.Errorf("cannot get AllowList Metrics Confimap for %v: %v", deployment.Name, err)
 				}
 				workload.Metrics.AllowList = allowList
 			}

@@ -8,6 +8,8 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -1490,8 +1492,78 @@ var _ = Describe("Yggdrasil", func() {
 			// then
 			Expect(res).To(BeAssignableToTypeOf(&operations.GetDataMessageForDeviceInternalServerError{}))
 		})
-	})
+		Context("AnsiblePlaybookExecution", func() {
 
+			var (
+				deviceName string
+				// device     *v1alpha1.EdgeDevice
+				params = api.GetDataMessageForDeviceParams{
+					DeviceID: "foo",
+				}
+			)
+
+			validateAndGetDeviceConfig := func(res middleware.Responder) models.DeviceConfigurationMessage {
+
+				data, ok := res.(*operations.GetDataMessageForDeviceOK)
+				ExpectWithOffset(1, ok).To(BeTrue())
+				ExpectWithOffset(1, data.Payload.Type).To(Equal(MessageTypeData))
+
+				content, ok := data.Payload.Content.(models.DeviceConfigurationMessage)
+
+				ExpectWithOffset(1, ok).To(BeTrue())
+				return content
+			}
+
+			BeforeEach(func() {
+				deviceName = "foo"
+				// device = getDevice(deviceName)
+			})
+			It("Send an ansible playbook", func() {
+				// given
+				playbookContent := `
+				---
+				-  name: Hello World Ansible Playbook
+				hosts: localhost
+				gather_facts: false
+
+				tasks:
+				- name: Create a file called '/tmp/testfile.txt' with the content 'hello world'.
+					copy:
+					content: hello world
+					dest: /tmp/testfile.txt
+				- name: Another task
+					debug:
+						msg: Test message
+				- name: Last task
+					debug:
+					var: ansible_facts
+				`
+
+				err := ioutil.WriteFile("./helloworld_playbook.yml", []byte(playbookContent), 0600)
+				defer os.Remove("./helloworld_playbook.yml")
+				Expect(err).To(BeNil())
+
+				device := getDevice(deviceName)
+				// device.Status.Deployments = []v1alpha1.Deployment{{Name: "workload1"}}
+
+				edgeDeviceRepoMock.EXPECT().
+					Read(gomock.Any(), deviceName, testNamespace).
+					Return(device, nil).
+					Times(1)
+
+				// when
+				res := handler.GetDataMessageForDevice(context.TODO(), params)
+
+				// then
+				Expect(res).To(BeAssignableToTypeOf(&operations.GetDataMessageForDeviceOK{}))
+				config := validateAndGetDeviceConfig(res)
+
+				Expect(config.DeviceID).To(Equal(deviceName))
+				Expect(config.AnsiblePlaybook).NotTo(BeEmpty())
+				Expect(config.AnsiblePlaybook).To(Equal(playbookContent))
+			})
+		})
+	})
 	Context("PostDataMessageForDevice", func() {
 
 		var (
