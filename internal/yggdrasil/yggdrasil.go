@@ -293,14 +293,14 @@ func (h *Handler) getAnsiblePlaybook(logger logr.Logger, deviceID string) (strin
 	return "", nil
 }
 
-func contains(s []string, toFind string) bool {
-	for _, a := range s {
-		if a == toFind {
-			return true
-		}
-	}
-	return false
-}
+// func contains(s []string, toFind string) bool {
+// 	for _, a := range s {
+// 		if a == toFind {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
 func (h *Handler) getDeviceMetricsConfiguration(ctx context.Context, edgeDevice *v1alpha1.EdgeDevice) (*models.MetricsConfiguration, error) {
 	metricsConfigSpec := edgeDevice.Spec.Metrics
