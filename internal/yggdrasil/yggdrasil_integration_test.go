@@ -8,8 +8,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -1492,7 +1490,7 @@ var _ = Describe("Yggdrasil", func() {
 			// then
 			Expect(res).To(BeAssignableToTypeOf(&operations.GetDataMessageForDeviceInternalServerError{}))
 		})
-		Context("AnsiblePlaybookExecution", func() {
+		/*Context("AnsiblePlaybookExecution", func() {
 
 			var (
 				deviceName string
@@ -1562,7 +1560,7 @@ var _ = Describe("Yggdrasil", func() {
 				Expect(config.AnsiblePlaybook).NotTo(BeEmpty())
 				Expect(config.AnsiblePlaybook).To(Equal(playbookContent))
 			})
-		})
+		})*/
 	})
 	Context("PostDataMessageForDevice", func() {
 
