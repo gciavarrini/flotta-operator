@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/project-flotta/flotta-operator/internal/configmaps"
 	"github.com/project-flotta/flotta-operator/internal/devicemetrics"
@@ -56,7 +55,8 @@ var (
 		PeriodSeconds:   60,
 	}
 
-	playbookMap = make(map[string][]string)
+	playbookMap   = make(map[string][]string)
+	playbookCount = make(map[string]int)
 )
 
 type Handler struct {
@@ -237,6 +237,13 @@ func (h *Handler) GetDataMessageForDevice(ctx context.Context, params yggdrasil.
 		logger.Error(err, "failed getting device metrics configuration")
 		return operations.NewGetDataMessageForDeviceInternalServerError()
 	}
+	metadataMap := make(map[string]string)
+	if ansiblePlaybook != "" {
+		metadataMap["ansible-playbook"] = "true"
+		metadataMap["crc_dispatcher_correlation_id"] = uuid.New().String()
+		metadataMap["return_url"] = ""
+		// metadataMap["response_interval"] =
+	}
 
 	// TODO: Network optimization: Decide whether there is a need to return any payload based on difference between last applied configuration and current state in the cluster.
 	message := models.Message{
@@ -246,29 +253,42 @@ func (h *Handler) GetDataMessageForDevice(ctx context.Context, params yggdrasil.
 		Version:   1,
 		Sent:      strfmt.DateTime(time.Now()),
 		Content:   dc,
+		Metadata:  metadataMap,
 	}
+
 	return operations.NewGetDataMessageForDeviceOK().WithPayload(&message)
 }
 
 // Temporary function to "mock" of the custom playbook will be sent from the user to the operator
 func (h *Handler) getAnsiblePlaybook(logger logr.Logger, deviceID string) (string, error) {
-	//check for yml file ("*_playbook.yml") in folder
-	files, err := ioutil.ReadDir(".")
-	if err != nil {
-		logger.Error(err, "cannot read dir")
-		return "", nil
-	}
-	for _, file := range files {
-		if x, found := playbookMap[deviceID]; strings.HasSuffix(file.Name(), "_playbook.yml") && (!found || (found && !contains(x, file.Name()))) {
-			//send the first file that hasn't been already sent to DeviceID
-			playbookMap[deviceID] = append(playbookMap[deviceID], file.Name())
-			content, err := ioutil.ReadFile(file.Name())
-			if err != nil {
-				logger.Error(err, "cannot read playbook file")
-				return "", nil
-			}
-			return string(content), nil
-		}
+	playbookCount[deviceID] = playbookCount[deviceID] + 1
+	if playbookCount[deviceID] == 2 {
+
+		playbookName := "helloworld_playbook.yml"
+		// if x, found := playbookMap[deviceID]; !found || (found && !contains(x, playbookName)) {
+		logger.Info("\n************ Found playbook ********* ", "playbook file", playbookName)
+		//send the first file that hasn't been already sent to DeviceID
+		playbookMap[deviceID] = append(playbookMap[deviceID], playbookName)
+
+		playbookContent := `
+---
+-  name: Hello World Ansible Playbook
+   hosts: 127.0.0.1
+   gather_facts: false
+   
+   tasks:
+   - name: Create a file called '/tmp/testfile.txt' with the content 'hello world'.
+     copy:
+       content: hello world
+       dest: /tmp/testfile.txt
+   - name: Another task
+     debug:
+       msg: Test message
+   - name: Last task
+     debug:
+       var: ansible_facts
+`
+		return playbookContent, nil
 	}
 	return "", nil
 }
