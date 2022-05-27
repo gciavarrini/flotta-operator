@@ -2,9 +2,9 @@
 name: Go
 on:  # yamllint disable-line rule:truthy
   push:
-    branches: [main]
+    branches: [checkCIdiff]
   pull_request:
-    branches: [main]
+    branches: [checkCIdiff]
 
 jobs:
   build:
