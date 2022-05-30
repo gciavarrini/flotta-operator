@@ -34,17 +34,20 @@ jobs:
     #     name: test-coverage
     #     path: coverage.html
     - name: Check ls before
-      run: ls client/ client/yggdrasil/
+      run: ls  client/yggdrasil/
+    - name: Checking generated files are up to date BEFORE
+      run: |
+        git diff client/yggdrasil/
 
     - name: Pre-Build
       run: make pre-build
-      
+
     - name: Check ls
-      run: ls client/ client/yggdrasil/
+      run: ls client/yggdrasil/
 
     - name: Checking generated files are up to date
       run: |
-        git diff client/ client/yggdrasil/
+        git diff client/yggdrasil/
 
   # Coverage:
   #   needs: build
