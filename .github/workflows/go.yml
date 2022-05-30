@@ -33,11 +33,6 @@ jobs:
     #   with:
     #     name: test-coverage
     #     path: coverage.html
-    - name: Check ls before
-      run: ls  client/yggdrasil/
-    - name: Checking generated files are up to date BEFORE
-      run: |
-        git diff client/yggdrasil/
 
     - name: Pre-Build
       run: make pre-build
@@ -47,6 +42,7 @@ jobs:
 
     - name: Checking generated files are up to date
       run: |
+        if [[ $(git ls-files --others --exclude-standard) ]]; then git ls-files --others --exclude-standard; echo "These files are not tracked by git"; exit 1; fi
         git diff client/yggdrasil/
 
   # Coverage:
