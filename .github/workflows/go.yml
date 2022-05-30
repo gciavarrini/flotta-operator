@@ -33,7 +33,8 @@ jobs:
     #   with:
     #     name: test-coverage
     #     path: coverage.html
-
+    - name: Pre-Build
+      run: make pre-build
     - name: Checking generated files are up to date
       run: |
         ls client/ client/yggdrasil/; git diff client/ client/yggdrasil/
