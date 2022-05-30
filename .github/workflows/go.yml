@@ -36,8 +36,7 @@ jobs:
 
     - name: Checking generated files are up to date
       run: |
-        ls client/
-        git diff --exit-code client/
+        ls client/; git diff client/
 
   Coverage:
     needs: build
