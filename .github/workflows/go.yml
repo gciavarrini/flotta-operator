@@ -36,7 +36,7 @@ jobs:
 
     - name: Checking generated files are up to date
       run: |
-        git diff client/ || (echo "There are not committed changes"; git diff client/ | tee; exit 1)
+        git diff --no-index client/ || (echo "There are not committed changes"; git diff --no-index  client/ | tee; exit 1)
 
   Coverage:
     needs: build
