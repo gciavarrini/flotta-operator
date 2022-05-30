@@ -36,7 +36,7 @@ jobs:
 
     - name: Checking generated files are up to date
       run: |
-        ls client/; git diff client/
+        ls client/ client/yggdrasil/; git diff client/ client/yggdrasil/
 
   Coverage:
     needs: build
