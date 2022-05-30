@@ -33,49 +33,56 @@ jobs:
     #   with:
     #     name: test-coverage
     #     path: coverage.html
+    - name: Check ls before
+      run: ls client/ client/yggdrasil/
+
     - name: Pre-Build
       run: make pre-build
+      
+    - name: Check ls
+      run: ls client/ client/yggdrasil/
+
     - name: Checking generated files are up to date
       run: |
-        ls client/ client/yggdrasil/; git diff client/ client/yggdrasil/
+        git diff client/ client/yggdrasil/
 
-  Coverage:
-    needs: build
-    name: "Test Coverage ${{ needs.build.outputs.coverage }}"
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo 'Coverage status: ${{ needs.build.outputs.coverage }}'
-          if [ "$TEST" -lt "80" ]; then echo "Min coverage failed"; exit 1; fi
-  Lint:
-    name: Lint code
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+  # Coverage:
+  #   needs: build
+  #   name: "Test Coverage ${{ needs.build.outputs.coverage }}"
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: |
+  #         echo 'Coverage status: ${{ needs.build.outputs.coverage }}'
+  #         if [ "$TEST" -lt "80" ]; then echo "Min coverage failed"; exit 1; fi
+  # Lint:
+  #   name: Lint code
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v2
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v2.5.1
-        with:
-          args: --timeout=2m
+  #     - name: Run golangci-lint
+  #       uses: golangci/golangci-lint-action@v2.5.1
+  #       with:
+  #         args: --timeout=2m
 
-  YamlLint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v2
-      - name: 🚀 Run yamllint
-        run: |
-          yamllint -f github -c .yamllint .
+  # YamlLint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: ⤵️ Check out code from GitHub
+  #       uses: actions/checkout@v2
+  #     - name: 🚀 Run yamllint
+  #       run: |
+  #         yamllint -f github -c .yamllint .
 
-  Security-Scanner:
-    name: Security Scanner
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+  # Security-Scanner:
+  #   name: Security Scanner
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v2
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: '-exclude-generated  ./...'
+  #     - name: Run Gosec Security Scanner
+  #       uses: securego/gosec@master
+  #       with:
+  #         args: '-exclude-generated  ./...'
