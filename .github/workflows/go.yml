@@ -2,7 +2,7 @@
 name: Go
 on:  # yamllint disable-line rule:truthy
   push:
-    branches: [main]
+    branches: [status-porcellain]
   pull_request:
     branches: [main]
 
@@ -19,26 +19,27 @@ jobs:
       with:
         go-version: 1.17
 
-    - name: Test
-      run: make test
+    # - name: Test
+    #   run: make test
 
-    - name: Coverage
-      id: coverage
-      run: |
-        make test-create-coverage
-        COVERAGE=$(go tool cover --func=cover.out |  grep total | grep -Eo '[0-9]+\.[0-9]+')
-        echo "::set-output name=coverage::${COVERAGE}"
+    # - name: Coverage
+    #   id: coverage
+    #   run: |
+    #     make test-create-coverage
+    #     COVERAGE=$(go tool cover --func=cover.out |  grep total | grep -Eo '[0-9]+\.[0-9]+')
+    #     echo "::set-output name=coverage::${COVERAGE}"
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: test-coverage
-        path: coverage.html
+    # - uses: actions/upload-artifact@v2
+    #   with:
+    #     name: test-coverage
+    #     path: coverage.html
+    - name: generated
+      run: make generate
 
     - name: Checking generated files are up to date
       run: |
         if [[ $(git ls-files --others --exclude-standard) ]]; then git ls-files --others --exclude-standard; echo "These files are not tracked by git"; exit 1; fi
-        git diff --quiet config/ internal/ client/ restapi/ generated/ || (echo "There are not committed changes"; git diff config/ internal/ client/ restapi/ generated/ | tee; exit 1)
-
+        if [ -n "$(git status --porcelain)" ]; then echo "There are uncommitted changes:"; git status --short; exit 1 fi
   Coverage:
     needs: build
     name: "Test Coverage ${{ needs.build.outputs.coverage }}"
@@ -47,35 +48,35 @@ jobs:
       - run: |
           echo 'Coverage status: ${{ needs.build.outputs.coverage }}'
           if [ "$TEST" -lt "80" ]; then echo "Min coverage failed"; exit 1; fi
-  Lint:
-    name: Lint code
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+  # Lint:
+  #   name: Lint code
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v2
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v2.5.1
-        with:
-          args: --timeout=2m
+  #     - name: Run golangci-lint
+  #       uses: golangci/golangci-lint-action@v2.5.1
+  #       with:
+  #         args: --timeout=2m
 
-  YamlLint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v2
-      - name: 🚀 Run yamllint
-        run: |
-          yamllint -f github -c .yamllint .
+  # YamlLint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: ⤵️ Check out code from GitHub
+  #       uses: actions/checkout@v2
+  #     - name: 🚀 Run yamllint
+  #       run: |
+  #         yamllint -f github -c .yamllint .
 
-  Security-Scanner:
-    name: Security Scanner
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+  # Security-Scanner:
+  #   name: Security Scanner
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v2
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: '-exclude-generated  ./...'
+  #     - name: Run Gosec Security Scanner
+  #       uses: securego/gosec@master
+  #       with:
+  #         args: '-exclude-generated  ./...'
