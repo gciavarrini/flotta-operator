@@ -39,7 +39,7 @@ jobs:
     - name: Checking generated files are up to date
       run: |
         if [[ $(git ls-files --others --exclude-standard) ]]; then git ls-files --others --exclude-standard; echo "These files are not tracked by git"; exit 1; fi
-        if [ -n "$(git status --porcelain)" ]; then echo "There are uncommitted changes:"; git status --short; exit 1 fi
+        if [ -n "$(git status --porcelain)" ]; then echo "There are uncommitted changes:"; git status --short; exit 1; fi
   Coverage:
     needs: build
     name: "Test Coverage ${{ needs.build.outputs.coverage }}"
