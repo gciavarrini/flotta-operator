@@ -2,7 +2,7 @@
 name: Go
 on:  # yamllint disable-line rule:truthy
   push:
-    branches: [ uses: securego/gosec@master]
+    branches: [fix-security-scanner-job]
   pull_request:
     branches: [main]
 
