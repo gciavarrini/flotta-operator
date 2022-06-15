@@ -2,7 +2,7 @@
 name: Go
 on:  # yamllint disable-line rule:truthy
   push:
-    branches: [main]
+    branches: [ uses: securego/gosec@master]
   pull_request:
     branches: [main]
 
@@ -78,4 +78,4 @@ jobs:
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
-          args: '-exclude-generated  ./...'
+          args: '-exclude-generated  ./... -buildvcs=false'
