@@ -275,9 +275,14 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 		h.metrics.IncEdgeDeviceSuccessfulRegistration()
 		return operations.NewPostDataMessageForDeviceOK().WithPayload(&res)
 	case "ansible":
+		logger.Info("#### received ansible message")
 		ns := h.getNamespace(ctx)
 		playbookExecutions, err := h.backend.GetPlaybookExecutions(ctx, deviceID, ns)
 
+				logger.Error("#### EdgeDevice NOT found")
+
+		logger.With("edgedevice", edgeDevice.Name).Info("#### EdgeDevice found")
+			logger.With("edgedevice label", labelName).Info("#### Check label")
 		if err != nil {
 			if errors.IsNotFound(err) {
 				return operations.NewGetDataMessageForDeviceNotFound()
@@ -299,6 +304,8 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 				Content:   pe.AnsiblePlaybookString,
 			}
 			break // FIXME: only one playbook is supported
+			} else {
+				logger.Error("#### label NOT found")
 		}
 		if message == nil {
 			return operations.NewPostDataMessageForDeviceOK()
