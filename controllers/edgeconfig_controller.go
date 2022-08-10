@@ -130,6 +130,8 @@ func createPlaybookExecution(edgeConfig *v1alpha1.EdgeConfig) v1alpha1.PlaybookE
 }
 
 func (r *EdgeConfigReconciler) addPlaybookExecutionToDevices(ctx context.Context, edgeConfig *v1alpha1.EdgeConfig, edgeDevices []v1alpha1.EdgeDevice) error {
+	logger.Info("#### invoke addPlaybookExecutionToDevices")
+
 	playbookExecutionBase := createPlaybookExecution(edgeConfig)
 	f := func(ctx context.Context, devices []v1alpha1.EdgeDevice) []error {
 
@@ -145,6 +147,7 @@ func (r *EdgeConfigReconciler) addPlaybookExecutionToDevices(ctx context.Context
 			}
 			edgeDevice := devices[i]
 			if !r.hasPlaybookExecution(edgeDevice, edgeDevice.Name+"-"+edgeConfig.Name) {
+				logger.Info("### device has no playbook execution", "device", edgeDevice.Name)
 				patch := client.MergeFrom(edgeDevice.DeepCopy())
 				playbookExecution := playbookExecutionBase.DeepCopy()
 				playbookExecution.Name = edgeDevice.Name + "-" + edgeConfig.Name

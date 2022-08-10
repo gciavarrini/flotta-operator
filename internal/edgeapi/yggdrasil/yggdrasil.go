@@ -179,6 +179,7 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 	deviceID := params.DeviceID
 	logger := h.logger.With("DeviceID", deviceID)
 	msg := params.Message
+	logger.With("Directive", msg.Directive).Info(">>>>>>>>>>>>>>>>>>>> PostDataMessageForDevice <<<<<<<<<<<<<<<<<<<<")
 	switch msg.Directive {
 	case "registration", "enrolment":
 		break
@@ -292,6 +293,7 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 		if len(playbookExecutions) == 0 {
 			return operations.NewGetDataMessageForDeviceInternalServerError()
 		}
+		logger.Info("#### PREPARE MSG for device wirh metadata ansible-playbook")
 		var message *models.Message
 		for _, pe := range playbookExecutions {
 			message = &models.Message{
@@ -308,6 +310,7 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 				logger.Error("#### label NOT found")
 		}
 		if message == nil {
+			logger.Info("#### NO PLAYBOOK EXECUTIONS FOUND FOR DEVICE")
 			return operations.NewPostDataMessageForDeviceOK()
 		}
 		return operations.NewGetDataMessageForDeviceOK().WithPayload(message)
