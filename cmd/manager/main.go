@@ -235,7 +235,7 @@ func main() {
 		EdgeConfigRepository:        edgeConfigRepository,
 		EdgeDeviceRepository:        edgeDeviceRepository,
 		PlaybookExecutionRepository: playbookExecutionRepository,
-		Concurrency:                 Config.EdgeConfigConcurrency,
+		Concurrency:                 1, //Config.EdgeConfigConcurrency,
 		ExecuteConcurrent:           controllers.ExecuteConcurrent,
 		MaxConcurrentReconciles:     int(Config.MaxConcurrentReconciles),
 	}).SetupWithManager(mgr); err != nil {
