@@ -191,7 +191,13 @@ func main() {
 	mux.Handle("/metrics", promhttp.HandlerFor(crmetrics.Registry, promhttp.HandlerOpts{}))
 	mux.HandleFunc("/healthz", httpOK)
 	mux.HandleFunc("/readyz", httpOK)
-	logger.Fatal(http.ListenAndServe(Config.MetricsAddr, mux))
+
+	srv := &http.Server{
+		Addr:              Config.MetricsAddr,
+		ReadHeaderTimeout: 3 * time.Second,
+		Handler:           mux,
+	}
+	logger.Fatal(srv.ListenAndServe())
 }
 
 func logger(logLevel string) (error, *zap.SugaredLogger) {
