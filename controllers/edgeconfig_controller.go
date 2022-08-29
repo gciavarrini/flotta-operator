@@ -182,6 +182,9 @@ func (r *EdgeConfigReconciler) addPlaybookExecutionToDevices(ctx context.Context
 					errs = append(errs, err2)
 					continue
 				}
+			} else {
+				logger.Info("### device has ALREADY playbook execution", "device", edgeDevice.Name)
+
 			}
 		}
 		return errs

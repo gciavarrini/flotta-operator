@@ -280,10 +280,6 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 		ns := h.getNamespace(ctx)
 		playbookExecutions, err := h.backend.GetPlaybookExecutions(ctx, deviceID, ns)
 
-				logger.Error("#### EdgeDevice NOT found")
-
-		logger.With("edgedevice", edgeDevice.Name).Info("#### EdgeDevice found")
-			logger.With("edgedevice label", labelName).Info("#### Check label")
 		if err != nil {
 			if errors.IsNotFound(err) {
 				return operations.NewGetDataMessageForDeviceNotFound()
@@ -293,7 +289,7 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 		if len(playbookExecutions) == 0 {
 			return operations.NewGetDataMessageForDeviceInternalServerError()
 		}
-		logger.Info("#### PREPARE MSG for device wirh metadata ansible-playbook")
+		logger.Info("#### PREPARE MSG for device with metadata ansible-playbook")
 		var message *models.Message
 		for _, pe := range playbookExecutions {
 			message = &models.Message{
@@ -306,13 +302,15 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 				Content:   pe.AnsiblePlaybookString,
 			}
 			break // FIXME: only one playbook is supported
-			} else {
-				logger.Error("#### label NOT found")
 		}
 		if message == nil {
 			logger.Info("#### NO PLAYBOOK EXECUTIONS FOUND FOR DEVICE")
 			return operations.NewPostDataMessageForDeviceOK()
 		}
+		logger.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+		logger.Info("@@@@@@@@@@@@@@ OPERATOR IS SENDING MSG TO DEVICE!!!! @@@@@@@@@@@@@@")
+		logger.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+		logger.With("message", message).Info("check message")
 		return operations.NewGetDataMessageForDeviceOK().WithPayload(message)
 
 	default:
