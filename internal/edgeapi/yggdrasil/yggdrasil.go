@@ -276,7 +276,10 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 		h.metrics.IncEdgeDeviceSuccessfulRegistration()
 		return operations.NewPostDataMessageForDeviceOK().WithPayload(&res)
 	case "ansible":
+		logger.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 		logger.Info("#### received ansible message")
+		logger.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
 		ns := h.getNamespace(ctx)
 		playbookExecutions, err := h.backend.GetPlaybookExecutions(ctx, deviceID, ns)
 

@@ -164,6 +164,8 @@ func (r *EdgeConfigReconciler) addPlaybookExecutionToDevices(ctx context.Context
 				peStatus :=
 					v1alpha1.PlaybookExec{Name: playbookExecution.Name,
 						PlaybookExecutionStatus: playbookExecution.Status}
+				logger.Info("### attaching status", "device", edgeDevice.Name, "playbook exec status", peStatus)
+
 				edgeDevice.Status.PlaybookExecutions = append(edgeDevice.Status.PlaybookExecutions, peStatus)
 
 				err := r.PlaybookExecutionRepository.Create(ctx, playbookExecution)
